@@ -1,66 +1,53 @@
+// src/RegisterUser.js
 
-import React, { useState } from 'react';
-import { sendEmailOtp } from './helpers/sendEmailOtp';
-
-function generateOtp() {
-  return Math.floor(1000 + Math.random() * 9000).toString();
-}
+import React, { useState } from "react";
+import { sendEmailOtp } from "./helpers/sendEmailOtp";
 
 const RegisterUser = () => {
-  const [email, setEmail] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [enteredOtp, setEnteredOtp] = useState('');
-  const [message, setMessage] = useState('');
+  const [formData, setFormData] = useState({
+    email: "",
+    mobile: "",
+    county: "",
+    subcounty: "",
+    ward: "",
+    pollingStation: "",
+  });
 
-  const handleSendOtp = async () => {
-    const otp = generateOtp();
-    setGeneratedOtp(otp);
-    const result = await sendEmailOtp(email, otp);
-    setMessage(result.message);
-    if (result.success) setOtpSent(true);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [status, setStatus] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleVerifyOtp = () => {
-    if (enteredOtp === generatedOtp) {
-      setMessage("✅ OTP verified successfully!");
+  const handleSendOtp = async () => {
+    if (!formData.email) {
+      setStatus("Email is required to send OTP.");
+      return;
+    }
+
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    localStorage.setItem("ourwill_otp", generatedOtp);
+
+    const response = await sendEmailOtp(formData.email, generatedOtp);
+    if (response.success) {
+      setOtpSent(true);
+      setStatus("OTP sent to email.");
     } else {
-      setMessage("❌ Incorrect OTP.");
+      setStatus(response.message);
     }
   };
 
-  return (
-    <div style={{ maxWidth: 400, margin: '2rem auto', padding: 20, border: '1px solid #ccc', borderRadius: 8 }}>
-      <h2>Register with Email</h2>
-      <input
-        type="email"
-        placeholder="Enter your email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        style={{ padding: 10, width: '100%', marginBottom: 10 }}
-      />
-      <button onClick={handleSendOtp} style={{ padding: '10px 20px' }}>
-        Send OTP
-      </button>
+  const handleVerifyOtp = () => {
+    const storedOtp = localStorage.getItem("ourwill_otp");
+    if (otp === storedOtp) {
+      setOtpVerified(true);
+      setStatus("OTP verified successfully!");
+    } else {
+      setStatus("Invalid OTP. Try again.");
+    }
+  };
 
-      {otpSent && (
-        <>
-          <input
-            type="text"
-            placeholder="Enter OTP"
-            value={enteredOtp}
-            onChange={e => setEnteredOtp(e.target.value)}
-            style={{ padding: 10, width: '100%', marginTop: 10 }}
-          />
-          <button onClick={handleVerifyOtp} style={{ padding: '10px 20px', marginTop: 10 }}>
-            Verify OTP
-          </button>
-        </>
-      )}
-
-      {message && <p style={{ marginTop: 20 }}>{message}</p>}
-    </div>
-  );
-};
-
-export default RegisterUser;
+  const han
