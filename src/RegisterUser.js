@@ -50,4 +50,134 @@ const RegisterUser = () => {
     }
   };
 
-  const han
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!otpVerified) {
+      setStatus("Please verify OTP before submitting.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/register-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setStatus("Registration successful!");
+        setFormData({
+          email: "",
+          mobile: "",
+          county: "",
+          subcounty: "",
+          ward: "",
+          pollingStation: "",
+        });
+        setOtp("");
+        setOtpSent(false);
+        setOtpVerified(false);
+      } else {
+        setStatus(data.message || "Failed to register.");
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      setStatus("Server error. Try again later.");
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: "500px", margin: "0 auto" }}>
+      <h2>Voter Registration</h2>
+
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        value={formData.email}
+        onChange={handleChange}
+        required
+      />
+      <br />
+
+      <button type="button" onClick={handleSendOtp} disabled={otpSent}>
+        {otpSent ? "OTP Sent" : "Send OTP"}
+      </button>
+      <br />
+
+      {otpSent && !otpVerified && (
+        <>
+          <input
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+          />
+          <button type="button" onClick={handleVerifyOtp}>
+            Verify OTP
+          </button>
+          <br />
+        </>
+      )}
+
+      <input
+        type="text"
+        name="mobile"
+        placeholder="Mobile Number"
+        value={formData.mobile}
+        onChange={handleChange}
+        required
+      />
+      <br />
+
+      <input
+        type="text"
+        name="county"
+        placeholder="County"
+        value={formData.county}
+        onChange={handleChange}
+        required
+      />
+      <br />
+
+      <input
+        type="text"
+        name="subcounty"
+        placeholder="Subcounty"
+        value={formData.subcounty}
+        onChange={handleChange}
+        required
+      />
+      <br />
+
+      <input
+        type="text"
+        name="ward"
+        placeholder="Ward"
+        value={formData.ward}
+        onChange={handleChange}
+        required
+      />
+      <br />
+
+      <input
+        type="text"
+        name="pollingStation"
+        placeholder="Polling Station"
+        value={formData.pollingStation}
+        onChange={handleChange}
+        required
+      />
+      <br />
+
+      <button type="submit" onClick={handleSubmit} disabled={!otpVerified}>
+        Submit Registration
+      </button>
+
+      <p>{status}</p>
+    </div>
+  );
+};
+
+export default RegisterUser;
